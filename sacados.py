@@ -1,5 +1,4 @@
 import numpy as np
-import sys
 
 N = 0    #le nombre d'objets
 B = 0    #la capacité du sac à dos, fixé à total/2
@@ -38,7 +37,7 @@ def ini(u,p):
     except RuntimeWarning:
         print(P)
 
-    #tri par Q décroissant
+    #tri par Q croissant
     sortedIndexes = np.argsort(Q)
     U = U[sortedIndexes]
     P = P[sortedIndexes]
@@ -225,8 +224,5 @@ def main():
     plt.title("temps")
     plt.errorbar(aff[:,0], aff[:,3], aff[:,4])
     plt.show()
-    #a,b,c = plt.hist(l,bins=range(1,N+1))
-    #print(a,b,c)
-    #plt.show()
 
 main()
