@@ -32,17 +32,14 @@ def ini(u,p):
     global U,P,Q
     U = np.array(u)
     P = np.array(p)
-    try:
-        Q = U/P
-    except RuntimeWarning:
-        print(P)
+    Q = U/P
 
     #tri par Q croissant
     sortedIndexes = np.argsort(Q)
     U = U[sortedIndexes]
     P = P[sortedIndexes]
     Q = Q[sortedIndexes]
-
+    
     return sortedIndexes
 
 def gloutonEntier(ind, u, p):
@@ -72,7 +69,7 @@ def gloutonPartie(ind, u, p):
         else:
             u+=U[i]*p/P[i]
             break
-    return u
+    return int(u)
 
 class Noeud:
     def __init__(self,depthRestante, index, utilite, poidsRestant, borne):
@@ -117,7 +114,7 @@ class Noeud:
 
 def naif():
     """return indices d'une sol opti, valeur, poids restant, nbNoeud"""
-    cpt=0
+    cpt=1
     u = 0
     pile = [Noeud.racineMax(N,B)]
     ind=[]
@@ -128,24 +125,25 @@ def naif():
         #évalue feuille
         if n.realisable() and n.d==0:
             e = n.eval()
-            if e>u:
+            if n.realisable() and e>u:
                 ind=n.ind
                 u=n.u
                 p=n.p
         
         #ajoute fils
-        if n.realisable() and n.hasNext():
+        if n.hasNext():
+        #if n.realisable() and n.hasNext():
             pile.append(n.next())
+            cpt+=1
         #fin branche
         else:
             pile.pop()
-            cpt+=1
         
     return ind,u,p,cpt
 
 def branchBound():
-    """return indices d'une sol opti, valeur, poids restant nbNoeud"""
-    cpt=0
+    """return indices d'une sol opti, valeur, poids restant, nbNoeud"""
+    cpt=1
     pile = [Noeud.racineMax(N,B)]
     inf = 0#correspond à l'utilité
     resInd=None  # type: list
@@ -186,32 +184,80 @@ def branchBound():
         
         if finBranche:
             pile.pop()
-            cpt+=1
             remonte=True
         else:#ajoute fils
+            cpt+=1
             pile.append(n.next())
             remonte=False
     
     return resInd,inf,resP,cpt
 
-import matplotlib.pyplot as plt
+def dyna():
+    #poids min avec i premiers objets pour avoir valeur v
+    vmax = U.sum()
+    pmin = np.full((N,vmax),-1)
+    
+    for i in range(vmax):
+        pmin[0][i] = 999999999
+    pmin[0][0] = 0
+    pmin[0][U[0]] = P[0]
+
+    def p(i, u):
+        #memoisation
+        if pmin[i][u]!=-1:
+            return pmin[i][u]
+        
+        if U[i] <= u:
+            return min(p(i - 1, u), P[i] + p(i - 1, u - U[i]))
+        return p(i - 1, u)
+    
+    for u in range(vmax):
+        for n in range(N):
+            p(n,u)
+        
+    #parcourt ligne considérant tous les objets
+    #retourne la valeur la plus grande tq pmin(n,v)<=B
+    imax = -1
+    for i in range(vmax-1,-1,-1):
+        if p(N-1,i) <= B:
+            imax = i
+            break
+    
+    #récupère la liste des indices à partir de la case optimale
+    assert imax!=-1
+    
+    return imax
+
+def schema_approx(epsilon):
+    K = epsilon*U.sum()/N
+    U2 = np.array([int(u/K) for u in U])
+    return dyna(P,U2)
+    
 
 def main():
+    import matplotlib.pyplot as plt
     from time import time
     #len(sys.argv)==4:
     #u,p = instance(*map(int,sys.argv[1:]))
     
     aff=[]
     print("n, nbnoeuds, std, temps, std")
-    for n in [100*i for i in range(1,11)]:
+    for n in [4*i for i in range(1,2)]:
         L=[]
-        for i in range(10):
-            u,p = instance(n,0,10000)
+        for i in range(1):
+            u,p = instance(n,0,5)
             t = time()
             sortedIndexes = ini(u,p)
             #a,b,c,d = naif()
-            a,b,c,d = branchBound()
-            L.append([a,b,c,d,time()-t])
+            a2,b2,c2,d2 = branchBound()
+            #assert (a,b,c) == (a2,b2,c2)
+            #print(d,d2)
+            #L.append([a,b,c,d,time()-t])
+            a3 = dyna()
+            print(b2)
+            print(a3)
+            assert a3==b2
+            L.append([a2,b2,c2,d2,time()-t])
         
         L=np.array(L)
         print(N, np.mean(L[:,3]), np.std(L[:,3]), np.mean(L[:,4]), np.std(L[:,4]))
@@ -223,6 +269,6 @@ def main():
     plt.figure()
     plt.title("temps")
     plt.errorbar(aff[:,0], aff[:,3], aff[:,4])
-    plt.show()
+    #plt.show()
 
 main()
