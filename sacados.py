@@ -192,7 +192,7 @@ def branchBound():
     
     return resInd,inf,resP,cpt
 
-def dyna():
+def dyna(P,U):
     #poids min avec i premiers objets pour avoir valeur v
     vmax = U.sum()
     pmin = np.full((N,vmax),-1)
@@ -201,20 +201,21 @@ def dyna():
         pmin[0][i] = 999999999
     pmin[0][0] = 0
     pmin[0][U[0]] = P[0]
-
     def p(i, u):
         #memoisation
         if pmin[i][u]!=-1:
             return pmin[i][u]
         
         if U[i] <= u:
-            return min(p(i - 1, u), P[i] + p(i - 1, u - U[i]))
-        return p(i - 1, u)
+            r = min(p(i - 1, u), P[i] + p(i - 1, u - U[i]))
+        else:
+            r = p(i - 1, u)
+        pmin[i,u]=r
+        return r
     
     for u in range(vmax):
         for n in range(N):
             p(n,u)
-        
     #parcourt ligne considérant tous les objets
     #retourne la valeur la plus grande tq pmin(n,v)<=B
     imax = -1
@@ -222,15 +223,19 @@ def dyna():
         if p(N-1,i) <= B:
             imax = i
             break
-    
-    #récupère la liste des indices à partir de la case optimale
-    assert imax!=-1
+
+    assert imax!=-1 
+
+    #TODO récupère la liste des indices à partir de la case optimale
     
     return imax
 
 def schema_approx(epsilon):
-    K = epsilon*U.sum()/N
+    print('sum', U.sum())
+    K = U.sum()/N/epsilon
+    print('K', K)
     U2 = np.array([int(u/K) for u in U])
+    print('sum', U2.sum())
     return dyna(P,U2)
     
 
@@ -242,10 +247,10 @@ def main():
     
     aff=[]
     print("n, nbnoeuds, std, temps, std")
-    for n in [4*i for i in range(1,2)]:
+    for n in [50*i for i in range(1,11)]:
         L=[]
-        for i in range(1):
-            u,p = instance(n,0,5)
+        for i in range(3):
+            u,p = instance(n,0,100)
             t = time()
             sortedIndexes = ini(u,p)
             #a,b,c,d = naif()
@@ -253,10 +258,11 @@ def main():
             #assert (a,b,c) == (a2,b2,c2)
             #print(d,d2)
             #L.append([a,b,c,d,time()-t])
-            a3 = dyna()
-            print(b2)
-            print(a3)
-            assert a3==b2
+            #a3 = dyna(P,U)
+            e=2
+            a3 = schema_approx(e)
+            print('opt',b2)
+            print('approx',a3)
             L.append([a2,b2,c2,d2,time()-t])
         
         L=np.array(L)
@@ -264,11 +270,11 @@ def main():
         aff.append([N, np.mean(L[:,3]), np.std(L[:,3]), np.mean(L[:,4]), np.std(L[:,4])])
     
     aff = np.array(aff)
-    plt.errorbar(aff[:,0], aff[:,1], aff[:,2])
-    plt.title("noeuds")
-    plt.figure()
+    #plt.errorbar(aff[:,0], aff[:,1], aff[:,2])
+    #plt.title("noeuds")
+    #plt.figure()
     plt.title("temps")
     plt.errorbar(aff[:,0], aff[:,3], aff[:,4])
-    #plt.show()
+    plt.show()
 
 main()
