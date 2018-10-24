@@ -231,12 +231,12 @@ def dyna(P,U):
     return imax
 
 def schema_approx(epsilon):
-    print('sum', U.sum())
-    K = U.sum()/N/epsilon
-    print('K', K)
+    """utile que si max(U) grand"""
+    K = max(U) * epsilon / N
     U2 = np.array([int(u/K) for u in U])
-    print('sum', U2.sum())
-    return dyna(P,U2)
+    print('sum', U.sum(), U2.sum())
+    #TODO calcule vraie valeur àp indices
+    return dyna(P,U2)*K
     
 
 def main():
@@ -259,7 +259,7 @@ def main():
             #print(d,d2)
             #L.append([a,b,c,d,time()-t])
             #a3 = dyna(P,U)
-            e=2
+            e=.1
             a3 = schema_approx(e)
             print('opt',b2)
             print('approx',a3)
