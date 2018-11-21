@@ -62,7 +62,6 @@ def mesureCompInv():
     plt.plot(x, l)
     plt.show()
 
-#mesureCompGCD()
 def my_expo_mod(N,g,n):
     """n en représentation binaire (n[0] est le LSB)"""
     h=1
@@ -105,12 +104,54 @@ assert compte(100) == 25
 assert compte(10) == 4
 assert compte(10**5) == 9592
 
+def carmichael(n):
+    for a in range(n):
+        #n divise a**(n-1) - 1
+        if my_gcd(a, n) == 1 and not (a ** (n - 1) - 1) % n == 0:
+            return False
+    return True
+
 def gen_carmichael(N):
-    l = []
-    for n in range(2, N):
-        for a in range(n):
-            #n divise a**(n-1) - 1
-            if my_gcd(a,n)==1 and not (a**(n-1) - 1) % n ==0:
-                break
-        l.append(n)
-    return l
+    return [i for i in range(N) if carmichael(i)]
+
+#print(gen_carmichael(10**3))
+def gen_carmichael_3p():
+    """boucle infinie
+    n'a  l'air de rien trouver"""
+    facteursPrem=[2,3,5]
+    prod = 2*3*5
+    n=6
+    ind = 0
+    while 1:
+        if first_test(n):
+            prod = prod // facteursPrem[ind] * n
+            facteursPrem[ind] = n
+            ind = (ind+1)%3
+            if carmichael(prod):
+                print(prod, facteursPrem)
+        n+=1
+
+
+def gen_carmichael_3p2():
+    import itertools
+    facteursPrem=[2,3]
+    n=4
+    while 1:
+        if first_test(n):
+            for f0,f1 in itertools.combinations(facteursPrem,2):
+                prod = f0*f1*n
+                if carmichael(prod):
+                    print(prod, f0,f1,n)
+            facteursPrem.append(n)
+        n+=1
+#gen_carmichael_3p2()
+
+def test_3p_carmichael(p,q,r):
+    if p==q or p==r or q==r:
+        return False
+    prod_moins1 = p*q*r - 1
+    return prod_moins1 % (p-1) == 0 and \
+           prod_moins1 % (q-1) == 0 and \
+           prod_moins1 % (r-1) == 0
+
+assert test_3p_carmichael(13, 37, 61)
