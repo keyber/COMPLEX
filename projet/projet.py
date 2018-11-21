@@ -142,7 +142,13 @@ def gen_carmichael_3p(Korselt):
             for f0,f1 in itertools.combinations(facteursPrem,2):
                 
                 #teste si le produit de ces deux nombres avec n est un nombre de carmichael
-                if test_3p_carmichael(f0,f1,n) if Korselt else test_carmichael(f0*f1*n):
+                carmi = False
+                if Korselt:
+                    carmi = test_3p_carmichael(f0,f1,n)
+                else :
+                    carmi = test_carmichael(f0*f1*n)
+                
+                if carmi:
                     print(f0*f1*n,"=", f0,"*",f1,"*",n)
             
             #ajoute n à la liste des nombres premiers
