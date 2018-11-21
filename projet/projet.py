@@ -104,7 +104,7 @@ assert compte(100) == 25
 assert compte(10) == 4
 assert compte(10**5) == 9592
 
-def carmichael(n):
+def test_carmichael(n):
     for a in range(n):
         #n divise a**(n-1) - 1
         if my_gcd(a, n) == 1 and not (a ** (n - 1) - 1) % n == 0:
@@ -112,41 +112,13 @@ def carmichael(n):
     return True
 
 def gen_carmichael(N):
-    return [i for i in range(N) if carmichael(i)]
+    return [i for i in range(N) if test_carmichael(i)]
 
 #print(gen_carmichael(10**3))
-def gen_carmichael_3p():
-    """boucle infinie
-    n'a  l'air de rien trouver"""
-    facteursPrem=[2,3,5]
-    prod = 2*3*5
-    n=6
-    ind = 0
-    while 1:
-        if first_test(n):
-            prod = prod // facteursPrem[ind] * n
-            facteursPrem[ind] = n
-            ind = (ind+1)%3
-            if carmichael(prod):
-                print(prod, facteursPrem)
-        n+=1
 
-
-def gen_carmichael_3p2():
-    import itertools
-    facteursPrem=[2,3]
-    n=4
-    while 1:
-        if first_test(n):
-            for f0,f1 in itertools.combinations(facteursPrem,2):
-                prod = f0*f1*n
-                if carmichael(prod):
-                    print(prod, f0,f1,n)
-            facteursPrem.append(n)
-        n+=1
-#gen_carmichael_3p2()
 
 def test_3p_carmichael(p,q,r):
+    """critère de Korselt"""
     if p==q or p==r or q==r:
         return False
     prod_moins1 = p*q*r - 1
@@ -154,4 +126,31 @@ def test_3p_carmichael(p,q,r):
            prod_moins1 % (q-1) == 0 and \
            prod_moins1 % (r-1) == 0
 
+def gen_carmichael_3p(Korselt):
+    """boucle infinie
+    affiche les résultats trouvés au fur et à mesure"""
+    import itertools
+    #liste des nombres premiers inférieurs à n
+    facteursPrem=[2,3]
+    n=4
+    while 1:
+        if first_test(n):
+            #cherche les nombre de carmichael qui sont le produit de n
+            #et deux autres nombres premiers distincts strictement inférieurs à n
+            
+            #pour chaque combinaison de 2 nombres parmi la liste des facteurs premiers
+            for f0,f1 in itertools.combinations(facteursPrem,2):
+                
+                #teste si le produit de ces deux nombres avec n est un nombre de carmichael
+                if test_3p_carmichael(f0,f1,n) if Korselt else test_carmichael(f0*f1*n):
+                    print(f0*f1*n,"=", f0,"*",f1,"*",n)
+            
+            #ajoute n à la liste des nombres premiers
+            facteursPrem.append(n)
+        n+=1
+        
+gen_carmichael_3p(Korselt=False)
+
+
+#nombre maximal obtenu en 5 minutes sans utiliser le critère de Korselt
 assert test_3p_carmichael(13, 37, 61)
