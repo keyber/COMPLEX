@@ -3,7 +3,9 @@ def my_gcd(a, b):
     while b:
         a, b = b, a%b
     return a
-#todo tests
+assert my_gcd(10,5)==5
+assert my_gcd(10,11)==1
+
 def my_inverse(a, N):
     if N==0:
         raise ArithmeticError(str(a) + "pas inversible modulo 0")
@@ -20,6 +22,15 @@ def my_inverse(a, N):
         return u0 % N
     
     raise ArithmeticError(str(a) + " et " + str(N) + " pas inversibles")
+
+assert my_inverse(5,4) == 1
+assert my_inverse(16,9) == 4
+try:
+    my_inverse(10,12)
+    assert False
+except ArithmeticError:
+    pass
+
 
 from time import time
 import matplotlib.pyplot as plt
@@ -64,12 +75,12 @@ def mesureCompInv():
 
 def my_expo_mod(N,g,n):
     """n en représentation binaire (n[0] est le LSB)"""
-    h=1
+    h = 1
     l = len(n)
     for i in range(l-1,-1,-1):
-        h = (h*h)%N
-        if n[i]==1:
-            h=(h*g)%N
+        h = h * h % N
+        if n[i] == 1:
+            h = h * g % N
     return h
 
 assert my_expo_mod(512,12,[1,1]) == 192
@@ -78,16 +89,6 @@ assert my_expo_mod(512,12,[1,1]) == 192
 #EXERCICE 2
 import math
 def first_test(N):
-    """soit n le nb de bit de N
-    la taille de la représentation de sqrt(N) est en O(n/2) = O(n)
-    il y a donc O(n) tours de boucle
-    
-    Si on considère que les opérations arithmétiques s'effectuent en O(1)
-    alors la complexité est en O(n)
-    Si elle est en O(bitsize(a) * bitsize(b))
-    alors la complexité est
-      O(n * n * bitsize(sqrt(N))) = O(n^3)
-    """
     racine = int(math.sqrt(N))
     for i in range(2,racine+1):
         if N%i==0:
@@ -110,6 +111,9 @@ def test_carmichael(n):
         if my_gcd(a, n) == 1 and not (a ** (n - 1) - 1) % n == 0:
             return False
     return True
+assert test_carmichael(561)
+assert not test_carmichael(562)
+
 
 def gen_carmichael(N):
     return [i for i in range(N) if test_carmichael(i)]
@@ -126,10 +130,15 @@ def test_3p_carmichael(p,q,r):
            prod_moins1 % (q-1) == 0 and \
            prod_moins1 % (r-1) == 0
 
+assert test_3p_carmichael(3,11,17)
+assert not test_3p_carmichael(5,11,17)
+assert test_3p_carmichael(5,13,17)
+#nombre maximal obtenu en 5 minutes sans utiliser le critère de Korselt :
+assert test_3p_carmichael(13, 37, 61)
+
 def gen_carmichael_3p(Korselt):
     """boucle infinie
     affiche les résultats trouvés au fur et à mesure"""
-    import itertools
     #liste des nombres premiers inférieurs à n
     facteursPrem=[2,3]
     n=4
@@ -139,18 +148,18 @@ def gen_carmichael_3p(Korselt):
             #et deux autres nombres premiers distincts strictement inférieurs à n
             
             #pour chaque combinaison de 2 nombres parmi la liste des facteurs premiers
-            for f0,f1 in itertools.combinations(facteursPrem,2):
-                
-                #teste si le produit de ces deux nombres avec n est un nombre de carmichael
-                if test_3p_carmichael(f0,f1,n) if Korselt else test_carmichael(f0*f1*n):
-                    print(f0*f1*n,"=", f0,"*",f1,"*",n)
+            for i in range(len(facteursPrem)):
+                f0 = facteursPrem[i]
+                for f1 in facteursPrem[f0:]:
+                    
+                    #teste si le produit de ces deux nombres avec n est un nombre de carmichael
+                    if test_3p_carmichael(f0,f1,n) if Korselt else test_carmichael(f0*f1*n):
+                        print(f0*f1*n,"=", f0,"*",f1,"*",n)
             
             #ajoute n à la liste des nombres premiers
             facteursPrem.append(n)
         n+=1
         
-gen_carmichael_3p(Korselt=False)
+gen_carmichael_3p(Korselt=True)
 
 
-#nombre maximal obtenu en 5 minutes sans utiliser le critère de Korselt
-assert test_3p_carmichael(13, 37, 61)
