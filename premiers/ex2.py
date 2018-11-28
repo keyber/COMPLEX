@@ -21,7 +21,7 @@ PRIMES = gen_primes(10**5)
 print("Calcul des nombres premiers effectué")
 assert gen_primes(15) == [2,3,5,7,11,13]
 assert len(gen_primes(100)) == 25
-assert len(PRIMES) == 9592
+assert len(gen_primes(10**5)) == 9592
 
 def prime_factorization(n, primes):
     """retourne la décomposition en produit de facteurs premiers de n sous la forme
