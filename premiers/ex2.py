@@ -1,6 +1,6 @@
 import math
 
-def first_test(N):
+def prime_test(N):
     """exponentiel car 2^(n/2) itérations"""
     racine = int(math.sqrt(N))
     for i in range(2,racine+1):
@@ -8,13 +8,13 @@ def first_test(N):
             return False
     return True
 
-assert first_test(2)
-assert first_test(13)
-assert not first_test(12)
+assert prime_test(2)
+assert prime_test(13)
+assert not prime_test(12)
 
 def gen_primes(n):
     """nombre exponentiel d'appels à une fonction de coût exponentiel"""
-    return [i for i in range(2, n) if first_test(i)]
+    return [i for i in range(2, n) if prime_test(i)]
 
 print("Calcul des nombres premiers...")
 PRIMES = gen_primes(10**5)
@@ -28,15 +28,27 @@ def prime_factorization(n, primes):
     d'une liste de couple (facteur premier, puissance)
     prend en paramètre la liste des nombres premiers inférieurs à n
     polynomial"""
+    assert n!=0
     res = []
     i = 0
-    while primes[i]<=n:
+    
+    #tant que n n'est pas complètement décomposé
+    while n!=1:
+        
+        #le nombre premier courant divise n
         if n%primes[i]==0:
+            #ajoute 1 à la puissance du nombre premier actuel
             if len(res) and res[-1][0]==primes[i]:
                 res[-1][1]+=1
+                
+            #crée une case pour insérer cette nouvelle puissance
             else:
                 res.append([primes[i],1])
+            
+            #continue avec le quotient de n par p
             n=n//primes[i]
+        
+        #on passe au nombre premier suivant
         else:
             i+=1
     
@@ -87,7 +99,8 @@ assert gen_carmichael(10**4, PRIMES) == [561,1105,1729,2465,2821,6601,8911]
 
 
 def test_3p_carmichael(p,q,r):
-    """critère de Korselt"""
+    """critère de Korselt,
+    p q et r doivent être des nombres premiers."""
     if p==q or p==r or q==r:#square free
         return False
     prod_moins1 = p*q*r - 1
@@ -108,7 +121,7 @@ def gen_carmichael_3p():
     facteursPrem=[2,3]
     n=4
     while 1:
-        if first_test(n):
+        if prime_test(n):
             #cherche les nombre de carmichael qui sont le produit de n
             #et deux autres nombres premiers distincts strictement inférieurs à n
             
@@ -125,55 +138,59 @@ def gen_carmichael_3p():
             facteursPrem.append(n)
         n+=1
 
+def nextPrimes(p, n):
+    """renvoie les n nombres premiers consécutifs à p"""
+    primes = []
+    i = p + 1
+    while len(primes) != n:
+        if prime_test(i):
+            primes.append(i)
+        i += 1
+    return primes
 
-def gen_carmichael_1_2p(r):
+
+def gen_carmichael_1_2p(p):
     """retourne l'ensemble (fini) des nombres de carmichael de la forme
-    p*q*r avec r fixé"""
-    assert first_test(r)
+    p*q*r avec p fixé"""
+    assert prime_test(p)
     
-    def f(r, x):
-        return (x * r - 1) // (x - 1)
+    p2, p3 = nextPrimes(p, 2)
+    sup_h = (p*p2-1)*(p*p3-1)//((p2-1)*(p3-1)) #à multiplier par 1/h
     
-    inf = r*r
-    sup = f(r, 2) * f(r, 3)#optimisable (par exemple en f(r,3)*f(r,5))
-    
-    list_ab=[]
-    #on énumère tous les couples (a,b) dont le produit est entre inf et sup (strictement)
-    #avc a<b et a et b premiers
-    for produit in range(inf+1, sup):
-        for a in range(2,int(math.sqrt(produit))+1):
-            if produit%a==0:
-                list_ab.append((a, produit//a))
-    
-    def pq_from_ab(a, b):
-        p = (r * (b - 1) + b * (a - 1)) // (a * b - r * r)
-        q = (1 + a * (p - 1)) // r
-        return p, q
-    
-    #on détermine p et q à partir de a et b pour chaque couple
-    ens_pq = {pq_from_ab(a,b) for a,b in list_ab}
-    
-    #restreint à l'ensemble des p et q premiers et p*q*r nombre de carmichael
-    carmi = [(p,q) for p,q in ens_pq if
-            test_3p_carmichael(r,p,q) and first_test(p) and first_test(q)]
-    
-    #retourne la liste triée par produit croissant
-    return sorted(carmi, key=lambda x : x[0]*x[1])
+    res = []
+    for h in range(2,p):
+        
+        #détermine les bornes de recherche pour k
+        inf = p*p//h + 1
+        sup = sup_h//h
+        for k in range(inf, sup+1):
+            
+            #calcule les valeurs de q et r correspondant aux valeurs de h et k
+            q = (p+h) * (p-1) // (h*k - p*p) + 1
+            r = (p*q - 1) // h + 1
+            
+            #si le nombre obtenu convient, l'ajoute au résultat
+            if test_3p_carmichael(p,q,r) and prime_test(q) and prime_test(r):
+                res.append((q,r))
+                
+    return res
 
-def print1_2(r, carmi_1_2p):
-    print("\nNombres de Carmichael de la forme pqr avec r =",r)
-    for p,q in carmi_1_2p:
-        print(r*p*q, "=", r,"*",p,"*",q)
+
+def print1_2(p, carmi_1_2p):
+    print("\nNombres de Carmichael de la forme p<q<r avec p =",p)
+    for q,r in carmi_1_2p:
+        print(p*q*r, "=", p,"*",q,"*",r)
     print()
 
 def main():
     CARMI = gen_carmichael(10**5, PRIMES)
     print(CARMI)
+    assert len(CARMI) == 16
     
-    print1_2(3, gen_carmichael_1_2p(3))
-    print1_2(5, gen_carmichael_1_2p(5))
+    for p in PRIMES[:6]:
+        print1_2(p, gen_carmichael_1_2p(p))
     
     print("forme pqr :")
     gen_carmichael_3p()
 
-#main()
+main()
