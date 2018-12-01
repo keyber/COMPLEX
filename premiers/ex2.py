@@ -183,6 +183,7 @@ def print1_2(p, carmi_1_2p):
     print()
 
 def main():
+    print(PRIMES[:100])
     CARMI = gen_carmichael(10**5, PRIMES)
     print(CARMI)
     assert len(CARMI) == 16
@@ -193,4 +194,4 @@ def main():
     print("forme pqr :")
     gen_carmichael_3p()
 
-main()
+#main()

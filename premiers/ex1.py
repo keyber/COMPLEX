@@ -2,7 +2,6 @@ from time import time
 import matplotlib.pyplot as plt
 import random
 
-
 def my_gcd(a, b):
     """polynomial"""
     while b:
