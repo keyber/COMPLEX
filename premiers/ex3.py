@@ -62,7 +62,7 @@ def getBinary(n):
     digits=[]
     while n:
         digits.append(n&1)
-        n>>=2
+        n>>=1
     digits.reverse()
     return digits
     
