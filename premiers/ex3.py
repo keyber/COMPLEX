@@ -70,10 +70,6 @@ def main():
     import matplotlib.pyplot as plt
     composed=[(i, getBinary(i)) for i in range(10**5) if not prime_test(i)]
     print("nombres composés considérés :",len(composed))
-    """for base in range(2,10):
-        l = error_proba_detailed(composed, base)
-        if max(l)<.1:
-            print(base)"""
     #plt.figure()
     plt.plot(range(2,100), [error_proba(composed, base) for base in range(2, 100)])
     plt.xlabel("Base choisie")
