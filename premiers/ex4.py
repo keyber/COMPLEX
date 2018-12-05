@@ -29,36 +29,6 @@ def my_gcd(a, b):
     return a
 
 
-assert my_gcd(10, 5) == 5
-assert my_gcd(10, 11) == 1
-
-
-def test_miller_rabin(n, T):
-    h = 0
-    m = n - 1
-    while m % 2 == 0:
-        m >>= 1
-        h += 1
-    assert (2 ** h * m == n - 1)
-
-    for i in range(T):
-        #a aléatoire inversible modulo n
-        a = random.randint(2, n-1)
-        
-        #b = my_expo_mod(a, m, n)
-        b = pow(a, m, n)
-        
-        if b != 1 and b != n - 1:
-            j=1
-            while j<h and b!=n-1:
-                b=b*b%n
-                if b == 1:
-                    return 0
-                j+=1
-            if b != n - 1:
-                return 0
-    return 1
-
 def getBinary(n):
     """retourne l'écriture en base 2 du nombre n.
     res[0] est le MSB"""
@@ -87,27 +57,36 @@ def get_hm_formBinary(n):
     return h, getBinary(m)
 
 
-"""def test_miller_rabin(n, T):
-    h, m = get_hm_formBinary(n)
-    
-    def strongTest(a):
-        b = my_expo_mod(a, m, n)
+def test_miller_rabin(n, T):
+    h,m = get_hm_formBinary(n)
+    """h = 0
+    m = n - 1
+    while m % 2 == 0:
+        m >>= 1
+        h += 1
+    assert (2 ** h * m == n - 1)"""
+
+    for _ in range(T):#nombre de tours
+        
+        #base aléatoire
+        a = random.randint(2, n-1)
+        
+        #calcul de a**m % n
+        b = my_expo_mod(a, m, n)#b = pow(a, m, n)
+        
         if b != 1 and b != n - 1:
-            for _ in range(h - 1):
-                b = b * b % n
+            j=1
+            while j<h and b!=n-1:
+                b=b*b%n
                 if b == 1:
                     return 0
-                if b == n - 1:
-                    return 1
-        return 1
+                j+=1
+            if b != n - 1:
+                return 0
     
-    for _ in range(T):
-        a = random.randint(2, n-1)
-        if not strongTest(a):#on a trouvé un diviseur
-            return 0
-        
-    #on a jamais trouvé de diviseur
-    return 1"""
+    #on n'a jamais trouvé de diviseur donc on retourne "premier"
+    return 1
+
 
 for _i in range(5,1000,2):
     if prime_test(_i):
@@ -116,25 +95,47 @@ for _i in range(5,1000,2):
 #221 = 13*17 = 1 + 4 * 55 = 1 + 2**2 * 55
 assert not test_miller_rabin(221, 100)
 
-#19 = 1 + 2**1 * 9   premier
-#assert test_miller_rabin(19, 1, [1, 0, 0, 1], 10)
-assert test_miller_rabin(19, 10)
-
 #561 = 3 * 11 * 17 est un nombre de carmichael
 #    = 1 + 2**4 * 35
 #assert not test_miller_rabin(561, 4, [1, 0, 0, 0, 1, 1], 10)
 assert not test_miller_rabin(561, 100)
 
+#19 = 1 + 2**1 * 9   premier
+#assert test_miller_rabin(19, 1, [1, 0, 0, 1], 10)
+assert test_miller_rabin(19, 100)
+
 
 def error_proba(test, T):
     return sum(test_miller_rabin(n, T) for n in test)/len(test)
 
+
+def gen_rsa(t):
+    m = 2**(t-1)
+    M = 2*m
+    
+    p=random.randint(m,M)
+    while not test_miller_rabin(p, 100):
+        p = random.randint(m, M)
+        
+    q=random.randint(m,M)
+    while q==p or not test_miller_rabin(q, 100):
+        q = random.randint(m, M)
+
+    return p*q,p,q
+
+for _i in range(3,10):
+    _n,_p,_q = gen_rsa(_i)
+    assert prime_test(_p) and prime_test(_q) and not prime_test(_n)
+
 def main():
     import matplotlib.pyplot as plt
+    print("rsa ",gen_rsa(64))
+    
+    
     #s=10**5 #shift
     s=0 #shift
     
-    composed = [i for i in range(s+1,s + 10**5 * 2,2) if not prime_test(i)]
+    composed = [i for i in range(s+1,s + 10**5,2) if not prime_test(i)]
     print("nombres composés considérés :", len(composed))
     
     r = range(1,5)
