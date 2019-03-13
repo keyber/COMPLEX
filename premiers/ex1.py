@@ -86,3 +86,6 @@ def my_expo_mod(N,g,n):
     return h
 
 assert my_expo_mod(512,12,[1,1]) == 192
+
+mesureCompGCD()
+mesureCompInv()

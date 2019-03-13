@@ -194,4 +194,4 @@ def main():
     print("forme pqr :")
     gen_carmichael_3p()
 
-#main()
+main()
